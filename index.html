@@ -500,7 +500,7 @@ details[open] summary::before { content: "− "; }
 
   function joinText(a, b) { a = (a || "").trim(); b = (b || "").trim(); return a && b ? a + "\n" + b : (a || b); }
   function syncContent() {
-    state.content = joinText(committed, sessionText);
+    state.content = joinCommitted(committed, sessionText);
     saveDraft();
     renderChecks();
   }
@@ -512,6 +512,29 @@ details[open] summary::before { content: "− "; }
     try { return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true; } catch (e) { return false; }
   })();
   var quickFails = 0, sessionAt = 0, sessionGotResult = false;
+
+  // 일부 휴대폰(갤럭시 Chrome 등)은 말하는 도중의 문장을 점점 길어지는 결과로 여러 번 보냄
+  // → 앞 문장이 다음 문장의 앞부분이면 긴 쪽 하나만 남겨 중복을 없앰
+  function norm(t) { return String(t).replace(/\s+/g, ""); }
+  function collapseParts(arr) {
+    var out = [];
+    arr.forEach(function (t) {
+      var last = out.length ? out[out.length - 1] : null;
+      if (last !== null && norm(t).indexOf(norm(last)) === 0) { out[out.length - 1] = t; return; }
+      if (last !== null && norm(last).indexOf(norm(t)) === 0) return;
+      if (out.some(function (o) { return norm(o) === norm(t); })) return;
+      out.push(t);
+    });
+    return out;
+  }
+  function joinCommitted(prev, next) {
+    prev = (prev || "").trim(); next = (next || "").trim();
+    if (!prev) return next; if (!next) return prev;
+    var lines = prev.split("\n"), last = lines[lines.length - 1];
+    if (norm(next).indexOf(norm(last)) === 0) { lines[lines.length - 1] = next; return lines.join("\n"); }
+    if (norm(prev).slice(-norm(next).length) === norm(next)) return prev;
+    return prev + "\n" + next;
+  }
 
   function startSession() {
     // 인식기는 한 번만 만들고 끊기면 같은 인식기를 다시 켬 (휴대폰이 마이크 권한을 매번 다시 묻지 않도록)
@@ -530,7 +553,8 @@ details[open] summary::before { content: "− "; }
           if (e.results[i].isFinal) fin.push(t); else interim += (interim ? " " : "") + t;
         }
         sessionGotResult = true;
-        sessionText = joinText(fin.join("\n"), interim);
+        if (interim) fin.push(interim);
+        sessionText = collapseParts(fin).join("\n");
         syncContent();
         renderRecMeta();
       };
@@ -544,7 +568,7 @@ details[open] summary::before { content: "− "; }
         // no-speech, network, aborted 는 onend 에서 다시 시작
       };
       r.onend = function () {
-        committed = joinText(committed, sessionText);
+        committed = joinCommitted(committed, sessionText);
         sessionText = "";
         syncContent();
         if (wantRec) {

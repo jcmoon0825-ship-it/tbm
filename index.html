@@ -78,7 +78,8 @@ section.card { background: var(--surface); border-radius: var(--radius); box-sha
 .tag.req { color: var(--red); font-weight: 500; }
 .tag.done { color: var(--mint); font-weight: 700; }
 
-.chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.chips .chip:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .chip { font: inherit; font-size: 14.5px; font-weight: 500; color: var(--ink); background: var(--surface); border: 1.5px solid var(--chip-line); border-radius: 12px; padding: 12px 4px; min-height: 50px; cursor: pointer; word-break: keep-all; line-height: 1.25; transition: background .15s, border-color .15s; }
 .chip:hover { border-color: var(--primary); }
 .chip[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700; }
@@ -294,7 +295,7 @@ details[open] summary::before { content: "− "; }
 (function () {
   "use strict";
 
-  var LOCATIONS = ["입출고 라인", "절단 라인", "밴딩 라인", "압입 라인", "가용접 라인", "본용접 라인", "검사/포장 라인", "금형반 라인", "크레인 라인"];
+  var LOCATIONS = ["1층 자동화", "로브레이징", "1층 검사", "1층 조립", "2층 조립/검사"];
   var STEPS = ["참여자 이름 부르기", "건강점검, 보호구 점검", "작업 순서와 내용 설명", "유해위험요인 설명", "참여자 의견 청취"];
   var DEFAULT_COMPANY = "경동공업㈜";
 
